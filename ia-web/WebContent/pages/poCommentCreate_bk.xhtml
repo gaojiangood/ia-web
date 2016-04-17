@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+	<title>备注</title>
+	<style type="text/css">
+.ui-widget {
+	font-size: 90%;
+}
+</style>
+</h:head>
+
+<h:body>
+	<h:form>
+		<p:messages id="msg" showDetail="true" autoUpdate="true" closable="true" />
+		<p:panelGrid columns="2">
+
+			<h:outputText value="订单编号:" />
+			<h:outputText value="#{poModel.createCommentPoDetail.poId}" />
+			
+			<h:outputText value="客户:" />
+			<h:outputText value="#{masterService.getCustomerName(poModel.createCommentPoDetail.custId)}" />
+			
+			<h:outputText  value="商品:" />
+			<h:outputText value="#{masterService.getItemName(poModel.createCommentPoDetail.itemId)}" />
+			
+			<p:outputLabel value="备注:" />
+			<p:inputText value="#{poModel.createCommentPoDetail.comment}" size="50" />
+		</p:panelGrid>
+		<p:column headerText="Select Car">
+			<p:commandButton value="确定" process="@form"
+				actionListener="#{poAction.closeComment()}" />
+		</p:column>
+	</h:form>
+</h:body>
+</html>

@@ -1,0 +1,206 @@
+package ia.service;
+
+import ia.annotation.Service;
+import ia.core.IaConstant;
+import ia.dao.TPoDao;
+import ia.dao.TPoDetailDao;
+import ia.dao.custom.TPoDetailCusDao;
+import ia.entity.TPo;
+import ia.entity.TPoDetail;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import javax.inject.Inject;
+
+@Service
+public class PoService {
+	
+	@Inject
+	TPoDao dao;
+	
+	@Inject
+	TPoDetailDao detailDao;
+	
+	@Inject
+	TPoDetailCusDao detailCusDao;
+	
+	@Inject
+	MasterService masterService;
+	
+	/**
+	 * 订单查询
+	 * @return
+	 */
+	public List<TPo> getAllPo(){
+		return dao.selectAll("");
+		
+	}
+	
+	public List<TPo> getPoByExample(TPo po){
+		return dao.selectByExample(po, "order by PO_ID");
+	}
+	
+	/**
+	 * 新建订单
+	 * @param po
+	 * @return
+	 */
+	public TPo createPo(TPo po){
+		dao.insert(po);
+		return dao.selectById(po.getPoId());
+	}
+	
+	/**
+	 * 更新订单
+	 * @param po
+	 * @return
+	 */
+	public TPo updatePo(TPo po){
+		try{
+			dao.update(po);
+		}catch(Exception e){
+			return null;
+		}
+		
+		return dao.selectById(po.getPoId());
+	}
+
+	/**
+	 * 订单明细查询
+	 * @return
+	 */
+	public List<TPoDetail> getAllPoDetail(String poId){
+		TPoDetail con = new TPoDetail();
+		con.setPoId(poId);
+		return detailDao.selectByExample(con, "order by CUST_ID,ITEM_ID");
+		
+	}
+	
+	/**
+	 * 订单明细查询
+	 * @return
+	 */
+	public List<TPoDetail> getPoDetailByExample(TPoDetail entity){
+		
+		return detailDao.selectByExample(entity, "order by CUST_ID,ITEM_ID");
+		
+	}
+	
+	/**
+	 * 新建订单明细
+	 * @param po
+	 * @return
+	 */
+	public TPoDetail createPoDetail(TPoDetail poDetail){
+		detailDao.insert(poDetail);
+		return detailDao.selectById(poDetail.getPoDId());
+	}
+	
+	/**
+	 * 订单明细更新
+	 * @param poDetail
+	 * @return
+	 */
+	public TPoDetail updatePoDetail(TPoDetail poDetail){
+		try{
+			detailDao.update(poDetail);
+		}catch(Exception e){
+			return null;
+		}
+		
+		
+		return detailDao.selectById(poDetail.getPoDId());
+	}
+	
+	/**
+	 * 根据明细ID取得订单明细
+	 * @param po
+	 * @return
+	 */
+	public TPoDetail getPoDetailById(String poDId){
+		return detailDao.selectById(poDId);
+	}
+	
+	/**
+	 * 订单明细删除
+	 * @param poDetail
+	 */
+	public void deletePoDetail(TPoDetail poDetail){
+		detailDao.delete(poDetail);
+	}
+	
+	/**
+	 * 待购商品取得
+	 * @return
+	 */
+	public List<TPoDetail> getNeedBuy(){
+		
+		return detailCusDao.selectNeedBuy("order by CUST_ID,ITEM_ID");
+		
+	}
+	
+	/**
+	 * 检查订单是否有未付款的明细
+	 * @param po
+	 * @return
+	 */
+	public boolean isHasNotPaid(TPo po){
+		TPoDetail detail = new TPoDetail();
+		
+		detail.setPoId(po.getPoId());
+		detail.setPayState(IaConstant.PAY_STATE_NO);
+		if(detailDao.selectByExample(detail, null).size() > 0){
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * 订单明细计算后更新订单
+	 * @return
+	 */
+	public TPo cumputePo(String poId){
+		
+		if(poId == null){
+			return null;
+		}
+		
+		TPo po = dao.selectById(poId);
+		List<TPoDetail> poDetialList = getAllPoDetail(poId);
+		
+		BigDecimal totalPrice = BigDecimal.ZERO;//金额合计
+		BigDecimal totalCost = BigDecimal.ZERO;//成本合计
+		BigDecimal totalProfit = BigDecimal.ZERO;//毛利润合计
+		BigDecimal totalNeedPay = BigDecimal.ZERO;//未付款合计
+		int totalQty =0; //数量合计
+		
+		for (TPoDetail poDetail : poDetialList) {
+			totalPrice = totalPrice.add(poDetail.getItemPricePay().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			
+			totalCost = totalCost.add(poDetail.getItemCost().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			
+			totalProfit = totalProfit.add(poDetail.getItemProfit().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			if(!masterService.isNoCount(poDetail.getItemId())){
+				totalQty = totalQty + poDetail.getItemQty();
+			}
+			
+			if(IaConstant.PAY_STATE_NO.equals(poDetail.getPayState())){
+				totalNeedPay = totalNeedPay.add(poDetail.getItemPricePay().multiply(
+						new BigDecimal(poDetail.getItemQty())));
+			}
+
+		}
+		
+		po.setItemPriceSum(totalPrice);
+		po.setItemCostSum(totalCost);
+		po.setProfitSum(totalProfit);
+		po.setPriceCut(totalNeedPay);//代用为未付款合计
+		po.setQtySum(totalQty);
+		
+		return this.updatePo(po);
+	}
+}

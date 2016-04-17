@@ -1,0 +1,619 @@
+package ia.action;
+
+import ia.annotation.Action;
+import ia.core.IaConstant;
+import ia.entity.TPo;
+import ia.entity.TPoDetail;
+import ia.model.PoModel;
+import ia.model.ShipModel;
+import ia.service.MasterService;
+import ia.service.PoService;
+
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.primefaces.component.api.UIData;
+import org.primefaces.context.RequestContext;
+import org.primefaces.event.CellEditEvent;
+import org.primefaces.event.SelectEvent;
+
+@Action
+public class PoAction {
+
+	@Inject
+	PoService service;
+
+	@Inject
+	PoModel model;
+	
+	@Inject
+	ShipModel shipModel;
+
+	@Inject
+	MasterService masterService;
+
+	/**
+	 * 订单列表查询
+	 */
+	public void getAllPo() {
+		TPo conPo = new TPo();
+		
+		conPo.setCustId(model.getConCustomerId());
+		conPo.setPoState(model.getConPoState());
+		
+		List<TPo> poList = service.getPoByExample(conPo);
+		
+		List<TPo> poListTmp = new ArrayList<TPo>();
+		List<TPo> poListTmp2 = new ArrayList<TPo>();
+		
+		if(model.getPoDateFrom() != null){
+			for(TPo obj : poList){
+				if(obj.getPoDate().compareTo(model.getPoDateFrom()) >= 0){
+					poListTmp.add(obj);
+				}
+			}
+		}else{
+			poListTmp.addAll(poList);
+		}
+		
+		if(model.getPoDateTo() != null){
+			for(TPo obj : poListTmp){
+				if(obj.getPoDate().compareTo(model.getPoDateTo()) <= 0){
+					poListTmp2.add(obj);
+				}
+			}
+		}else{
+			poListTmp2.addAll(poListTmp);
+		}
+		
+		model.setPo(poListTmp2);
+
+	}
+
+	/**
+	 * 新建订单按钮
+	 */
+	public void openPoCreate() {
+
+		RequestContext.getCurrentInstance().openDialog("poCreate");
+	}
+	
+	/**
+	 * 更新订单按钮
+	 */
+	public void openPoUpdate(TPo po) {
+		
+		model.setUpdatePo(po);
+
+		RequestContext.getCurrentInstance().openDialog("poUpdate");
+	}
+
+	
+
+	/**
+	 * 新建订单窗口初始化
+	 */
+	public void initCreatePo() {
+		TPo createPo = new TPo();
+		createPo.setPoId(masterService.genPoId());
+		createPo.setPoState(IaConstant.PO_STATE_BUY);
+		model.setCreatePo(createPo);
+	}
+	
+
+	/**
+	 * 关闭新建订单窗口
+	 * 
+	 * @param po
+	 */
+	public void closePo(TPo po) {
+		RequestContext.getCurrentInstance().closeDialog(po);
+	}
+
+	/**
+	 * 新建订单窗口确定
+	 * 
+	 * @param event
+	 */
+	public void createPo(SelectEvent event) {
+		TPo po = (TPo) event.getObject();
+		po = service.createPo(po);
+		model.getPo().add(po);
+	}
+	/**
+	 * 更新订单窗口确定
+	 * 
+	 * @param event
+	 */
+	public void updatePo(SelectEvent event) {
+		TPo po = (TPo) event.getObject();
+		po = service.updatePo(po);
+		if(po == null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "该数据已被其他用户更改，请刷新后重试。",null));
+			return ;
+		}
+		this.getAllPo();
+	}
+	
+	/**
+	 * 新建临时商品按钮
+	 */
+	public void openItemCreate() {
+
+		RequestContext.getCurrentInstance().openDialog("itemTmpCreate");
+	}
+	
+	/**
+	 * 新建订单明细按钮
+	 */
+	public void openPoDetailCreate() {
+		
+		TPo curPo = model.getCurPo();
+		if (curPo.getPoId() == null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "请先选择订单。",null));
+			return;
+		}
+		
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("modal", true);
+		options.put("draggable", true);
+		options.put("resizable", true);
+		options.put("width", "1150");
+		options.put("height", "700");
+		options.put("contentWidth", "1100");
+		options.put("contentHeight", "680");
+
+		RequestContext.getCurrentInstance().openDialog("poDetailCreate",options,null);
+	}
+
+	
+
+	/**
+	 * 新建订单明细窗口初始化
+	 */
+	public void initCreatePoDetail() {
+		TPoDetail createPoDetail = new TPoDetail();
+		createPoDetail.setPoId(model.getCurPo().getPoId());
+		createPoDetail.setCustId(model.getCurPo().getCustId());
+		createPoDetail.setItemQty(1);
+		createPoDetail.setBuyQty(0);
+		createPoDetail.setItemCost(BigDecimal.ZERO);
+		createPoDetail.setItemPrice(BigDecimal.ZERO);
+		createPoDetail.setItemPricePay(BigDecimal.ZERO);
+		createPoDetail.setItemProfit(BigDecimal.ZERO);
+		model.setCreatePoDetail(createPoDetail);
+	}
+	
+
+	/**
+	 * 关闭新建订单明细窗口
+	 * 
+	 * @param po
+	 */
+	public void closePoDetail(TPoDetail poDetail) {
+		RequestContext.getCurrentInstance().closeDialog(poDetail);
+	}
+
+	/**
+	 * 新建订单明细窗口确定
+	 * 
+	 * @param event
+	 */
+	public void createPoDetail(SelectEvent event) {
+		TPoDetail poDetail = (TPoDetail) event.getObject();
+		poDetail.setPoDId(masterService.genPoDId());
+		poDetail.setItemProfit(poDetail.getItemPricePay().subtract(poDetail.getItemCost()));
+		
+		poDetail = service.createPoDetail(poDetail);
+		model.getPoDetail().add(poDetail);
+		
+		this.refresh();
+	}
+	
+	/**
+	 * 新建明细窗口商品发生改变是更新商品价格成本等信息
+	 */
+	public void itemChangedCreate(){
+		TPoDetail detail = model.getCreatePoDetail();
+		if(detail.getItemId() != null && !detail.getItemId().equals("")){
+			detail.setItemCost(masterService.getItemById(detail.getItemId()).getItemCost());
+			detail.setItemPrice(masterService.getItemById(detail.getItemId()).getItemPrice());
+			detail.setItemPricePay(masterService.getItemById(detail.getItemId()).getItemPrice());
+			detail.setItemProfit(masterService.getItemById(detail.getItemId()).getItemProfit());
+		}else{
+			detail.setItemCost(BigDecimal.ZERO);
+			detail.setItemPrice(BigDecimal.ZERO);
+			detail.setItemPricePay(BigDecimal.ZERO);
+			detail.setItemProfit(BigDecimal.ZERO);
+		}
+		
+	}
+	
+	
+	/**
+	 * 更新订单
+	 * 
+	 * @param poDetail
+	 */
+	public void updatePo(TPo po) {
+		if(service.isHasNotPaid(po) & po.getPoState().equals(IaConstant.PO_STATE_SHIPED)){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "还有未付款的明细，暂时不能发货。",null));
+			return ;
+		}
+
+		if(service.updatePo(po)== null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "该数据已被其他用户更改，请刷新后重试。",null));
+			return ;
+		}
+
+	}
+
+	/**
+	 * 移动订单明细按钮
+	 */
+	public void openMovePoDetail() {
+		
+		if(model.getSelectedDetail().length == 0){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "请选择要移动的订单明细",null));
+			return ;
+		}
+			
+		RequestContext.getCurrentInstance().openDialog("poDetailMove");
+	}
+
+	/**
+	 * 移动订单明细窗口初始化
+	 */
+	public void initMovePoDetail() {
+		TPo po = new TPo();
+		po.setPoState(IaConstant.PO_STATE_BUY);
+		model.setMoveToPoList(service.getPoByExample(po));
+
+	}
+
+	/**
+	 * 关闭移动订单明细窗口
+	 * 
+	 * @param po
+	 */
+	public void closeMovePoDetail() {
+		RequestContext.getCurrentInstance().closeDialog(null);
+	}
+
+	/**
+	 * 移动订单明细窗口确定
+	 * 
+	 * @param event
+	 */
+	public void movePoDetail(SelectEvent event) {
+		String poIdTo = model.getMoveToPo().getPoId();
+		for(TPoDetail detail : model.getSelectedDetail()){
+			detail.setPoId(poIdTo);
+			service.updatePoDetail(detail);
+		}
+		this.getAllPoDetail(model.getCurPo());
+		
+		this.refresh();
+		
+		service.cumputePo(poIdTo);//移动先也要重新计算
+		
+		this.getAllPo();
+		
+	}
+	/**
+	 * 打开一键装箱窗口
+	 */
+	public void openFillShipId() {
+		
+		if(model.getSelectedDetail().length == 0){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "请选择要装箱的订单明细",null));
+			return ;
+		}
+			
+		RequestContext.getCurrentInstance().openDialog("poDetailFillShipId");
+	}
+
+	
+	/**
+	 * 关闭一键装箱窗口
+	 * 
+	 * @param po
+	 */
+	public void closeFillShipId() {
+		RequestContext.getCurrentInstance().closeDialog(null);
+	}
+
+	/**
+	 * 一键装箱窗口确定
+	 * 
+	 * @param event
+	 */
+	public void fillShipId(SelectEvent event) {
+		
+		for(TPoDetail detail : model.getSelectedDetail()){
+			detail.setShipId(model.getFillShipId());
+			service.updatePoDetail(detail);
+		}
+		
+	}
+
+	/**
+	 * 订单明细查询
+	 */
+	public void getAllPoDetail(TPo po) {
+		model.getPoDetail().clear();
+		model.setPoDetail(service.getAllPoDetail(po.getPoId()));
+
+		model.setCurPo(po);
+		TPo[] selected = {po};
+		model.setSelected(selected);
+
+	}
+
+	/**
+	 * 添加订单明细  已不用
+	 */
+	public void addPoDetail() {
+		TPo curPo = model.getCurPo();
+		if (curPo == null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "请先选择订单。",null));
+			return;
+		}
+
+		TPoDetail poDetail = new TPoDetail();
+		poDetail.setPoId(curPo.getPoId());
+		poDetail.setPoDId(masterService.genPoDId());
+		poDetail.setCustId(curPo.getCustId());
+		poDetail.setItemId("G000074");
+		poDetail = service.createPoDetail(poDetail);
+
+		model.getPoDetail().add(poDetail);
+
+	}
+
+	/**
+	 * 更新订单明细
+	 * 
+	 * @param poDetail
+	 */
+	public void updatePoDetail(TPoDetail poDetail) {
+		TPoDetail oldPoDetail = service.getPoDetailById(poDetail.getPoDId());
+
+		if (!oldPoDetail.getItemId().equals(poDetail.getItemId())) {
+			poDetail.setItemPricePay(masterService.getItemById(
+					poDetail.getItemId()).getItemPrice());
+			poDetail.setItemCost(masterService
+					.getItemById(poDetail.getItemId()).getItemCost());
+			poDetail.setItemPrice(masterService.getItemById(
+					poDetail.getItemId()).getItemPrice());
+			poDetail.setItemCost(masterService.getItemById(
+					poDetail.getItemId()).getItemCost());
+		}
+		poDetail.setItemProfit(poDetail.getItemPricePay().subtract(poDetail.getItemCost()));
+		
+		if(poDetail.getShipId() == null){//页面选择空行的时候返回null，为了能正常更新到数据库，null的时候设置为空白
+			poDetail.setShipId("");
+		}
+		
+		if(service.updatePoDetail(poDetail)== null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "该数据已被其他用户更改，请刷新后重试。",null));
+			return ;
+		}
+
+		refresh();
+	}
+	/**
+	 * 调试中 单元格编辑事件
+	 * @param event
+	 */
+	public void onEdit(CellEditEvent event) {
+	    UIData table = (UIData) event.getComponent();
+	    TPoDetail poDetail = (TPoDetail)table.getRowData();
+	    this.updatePoDetail(poDetail);
+	    String updateClientId = table.getClientId() + ":" + table.getRowIndex();
+	       RequestContext requestContext = RequestContext.getCurrentInstance();
+	       requestContext.update("@form");
+
+	    // ...
+	}
+	/**
+	 * 复制订单明细
+	 * 
+	 * @param poDetail
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws InstantiationException 
+	 * @throws IllegalAccessException 
+	 */
+	public void copyPoDetail() throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+		if(model.getSelectedDetail().length == 0){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "请选择要复制的订单明细",null));
+			return ;
+		}
+		for(TPoDetail poDetail : model.getSelectedDetail()){
+			TPoDetail newDetail = (TPoDetail)BeanUtils.cloneBean(poDetail);
+			newDetail.setPoDId(masterService.genPoDId());
+			//newDetail.setItemQty(1);
+			//newDetail.setBuyQty(0);
+			service.createPoDetail(newDetail);
+			model.getPoDetail().add(newDetail);
+		}
+		service.cumputePo(model.getSelectedDetail()[0].getPoId());
+		
+		this.refresh();
+		
+	}
+	/**
+	 * 删除订单明细
+	 * 
+	 * @param poDetail
+	 */
+	public void deletePoDetail(TPoDetail poDetail) {
+		service.deletePoDetail(poDetail);
+		model.getPoDetail().remove(poDetail);
+		this.refresh();
+	}
+
+	/**
+	 * 各种数字重新计算
+	 */
+	public void refresh() {
+		TPo newPo = service.cumputePo(model.getCurPo().getPoId());
+		if(newPo == null){
+			FacesContext.getCurrentInstance().addMessage("form", new FacesMessage(FacesMessage.SEVERITY_ERROR, "该数据已被其他用户更改，请刷新后重试。",null));
+		}else{
+			model.setCurPo(newPo);
+		}
+		this.getAllPo();
+		
+		/*List<TPoDetail> poDetailList = model.getPoDetail();
+
+		// 金额合计
+		BigDecimal totalAmt = BigDecimal.ZERO;
+		// 数量合计
+		Integer totalQty = 0;
+		// 未付款合计
+		BigDecimal totalUnPaid = BigDecimal.ZERO;
+		//成本合计
+		BigDecimal totalCost = BigDecimal.ZERO;
+
+		for (TPoDetail poDetail : poDetailList) {
+			totalAmt = totalAmt.add(poDetail.getItemPricePay().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			
+			totalCost = totalCost.add(poDetail.getItemCost().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			
+			if(poDetail.getItemId() != null && !poDetail.getItemId().equals("G000074")){//运费不计数
+				totalQty = totalQty + poDetail.getItemQty();
+			}
+			
+
+			if (poDetail.getPayState().equals(IaConstant.PAY_STATE_NO)) {
+				totalUnPaid = totalUnPaid.add(poDetail.getItemPricePay()
+						.multiply(new BigDecimal(poDetail.getItemQty())));
+			}
+		}
+		model.setCurTotalAmt(totalAmt);
+		model.setCurTotalQty(totalQty);
+		model.setCurTotalUnPaid(totalUnPaid);
+		
+		//订单更新
+		model.getCurPo().setItemPriceSum(totalAmt);//金额合计
+		model.getCurPo().setQtySum(totalQty);//数量合计
+		model.getCurPo().setItemCostSum(totalCost);//成本合计
+		//利润合计
+		model.getCurPo()
+				.setProfitSum(
+						totalAmt.subtract(totalCost)
+								.subtract(
+										model.getCurPo()
+												.getPriceCut()
+												.subtract(
+														model.getCurPo()
+																.getOtherFee()
+																.subtract(
+																		model.getCurPo()
+																				.getShipFee()))));
+		
+		this.updatePo(model.getCurPo());*/
+		
+	}
+
+	/**
+	 * 订单明细被选择事件处理
+	 */
+	public void poDetailSelect() {
+
+		// 金额合计
+		BigDecimal totalAmt = BigDecimal.ZERO;
+		// 数量合计
+		Integer totalQty = 0;
+		// 未付款合计
+		BigDecimal totalUnPaid = BigDecimal.ZERO;
+
+		TPoDetail[] selectDetailList = model.getSelectedDetail();
+		for (TPoDetail poDetail : selectDetailList) {
+			totalAmt = totalAmt.add(poDetail.getItemPricePay().multiply(
+					new BigDecimal(poDetail.getItemQty())));
+			totalQty = totalQty + poDetail.getItemQty();
+
+			if (poDetail.getPayState().equals(IaConstant.PAY_STATE_NO)) {
+				totalUnPaid = totalUnPaid.add(poDetail.getItemPricePay()
+						.multiply(new BigDecimal(poDetail.getItemQty())));
+			}
+		}
+
+		model.setSelectTotalAmt(totalAmt);
+		model.setSelectTotalQty(totalQty);
+		model.setSelectTotalUnPaid(totalUnPaid);
+
+	}
+	
+	/**
+	 * 将选中的订单明细设为已付款
+	 */
+	public void payPoDetail(){
+		TPoDetail[] selectDetailList = model.getSelectedDetail();
+		for (TPoDetail poDetail : selectDetailList) {
+			poDetail.setPayState(IaConstant.PAY_STATE_YES);
+			poDetail = service.updatePoDetail(poDetail);
+		}
+		this.refresh();
+	}
+	
+	/**
+	 * 将选中的订单明细设为已购买
+	 */
+	public void buyPoDetail(){
+		TPoDetail[] selectDetailList = model.getSelectedDetail();
+		for (TPoDetail poDetail : selectDetailList) {
+			poDetail.setBuyQty(poDetail.getItemQty());
+			poDetail = service.updatePoDetail(poDetail);
+		}
+		this.refresh();
+	}
+	
+	/**
+	 * 显示备注输入
+	 * @param poDetail
+	 */
+	public void showComment(TPoDetail poDetail,String winId) {
+		model.setCreateCommentPoDetail(poDetail);
+		
+		TPoDetail[] selectDetailList = {poDetail};
+		if(winId.equals("po")){
+			model.setSelectedDetail(selectDetailList);
+		}else if(winId.equals("ship")){
+			shipModel.setSelectedDetail(selectDetailList);
+		}
+		
+		
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("modal", true);
+		options.put("draggable", true);
+		options.put("resizable", true);
+		options.put("width", "1150");
+		options.put("height", "700");
+		options.put("contentWidth", "1100");
+		options.put("contentHeight", "680");
+		
+		RequestContext.getCurrentInstance().openDialog("poCommentCreate",options,null);
+		
+	}
+	
+	public void closeComment(){
+		this.updatePoDetail(model.getCreateCommentPoDetail());
+		RequestContext.getCurrentInstance().closeDialog(null);
+	}
+
+}

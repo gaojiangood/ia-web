@@ -1,0 +1,161 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<head>
+
+</head>
+
+<body>
+	<ui:composition template="../templates/main.xhtml">
+		<ui:define name="body">
+			<h:form id="shipForm">
+				<p:messages id="msgs" showDetail="true" autoUpdate="false"
+					showSummary="false" closable="true" />
+
+				<p:panel id="poDetailPnl" header="已付款未发货商品" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="poDetailPnl"
+					style="margin-bottom:20px">
+
+					<p:commandButton value="查询" title="查询待采购的商品"
+						actionListener="#{needShipAction.getAllPoDetail()}"
+						process="@form" update="@form">
+					</p:commandButton>
+
+					<p:commandButton value="一键买完" title="将选中的商品购买数量填满"
+						actionListener="#{needShipAction.buyPoDetail}" process="@form"
+						update="@form">
+					</p:commandButton>
+
+
+					<!-- 用于单元格编辑后刷新整个表格 -->
+					<p:remoteCommand name="onCellEdit" update="@form" />
+
+
+					<p:dataTable id="poDetailList" var="poDetail"
+						draggableColumns="true" draggableRows="true"
+						emptyMessage=" 无未发货商品。" scrollWidth="100%"
+						value="#{needShipModel.poDetail}"
+						selection="#{needShipModel.selectedDetail}"
+						rowKey="#{poDetail.poDId}" editable="true" editMode="cell"
+						style="margin-bottom:0">
+
+
+						<!--  -->
+						<p:ajax event="cellEdit"
+							listener="#{needShipAction.updatePoDetail(poDetail)}"
+							update="@this" oncomplete="onCellEdit()" />
+
+						<p:column selectionMode="multiple"
+							style="width:16px;text-align:center" />
+
+						<p:column headerText="订单编号" width="80">
+							<h:outputText value="#{poDetail.poId}"
+								rendered="#{empty poDetail.comment}" />
+							<h:outputText id="poId" value="#{poDetail.poId}"
+								style="color:red" rendered="#{not empty poDetail.comment}" />
+							<p:tooltip for="poId">
+								<h:outputText value="#{poDetail.comment}" />
+							</p:tooltip>
+						</p:column>
+						
+						<p:column headerText="订单明细日期" width="100">
+							<h:outputText value="#{poDetail.poDDate}">
+								<f:convertDateTime pattern="yyyy-MM-dd" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="客户" width="80" sortBy="#{poDetail.custId}">
+							<h:outputText
+								value="#{masterService.getCustomerName(poDetail.custId)}" />
+						</p:column>
+
+						<p:column headerText="商品" sortBy="#{poDetail.itemId}">
+
+							<h:outputText id="itemName"
+								value="#{masterService.getItemName(poDetail.itemId)}" />
+							<p:tooltip for="itemName">
+								<p:graphicImage id="img"
+									value="/pic/#{masterService.getItemById(poDetail.itemId).picUrl}"
+									width="300" />
+							</p:tooltip>
+
+						</p:column>
+
+
+						<p:column headerText="数量" width="40">
+							<h:outputText value="#{poDetail.itemQty}" />
+						</p:column>
+
+						<p:column headerText="单价" width="40">
+							<h:outputText id="itemPricePay" value="#{poDetail.itemPricePay}" />
+							<p:tooltip for="itemPricePay">
+								<p:graphicImage value="/images/prime_logo.png" />
+								<h:outputText value="原价:#{poDetail.itemPrice}" />
+								<h:outputText value="成本:#{poDetail.itemCost}" />
+							</p:tooltip>
+						</p:column>
+						<p:column headerText="小计" width="60">
+							<h:outputText value="#{poDetail.itemPricePay * poDetail.itemQty}" />
+						</p:column>
+
+						<p:column headerText="付款" width="50" sortBy="#{poDetail.payState}">
+							<h:outputText style="color:red"
+								rendered="#{poDetail.payState eq 'B01'}"
+								value="#{masterService.getNameCdLabel('B',poDetail.payState)}" />
+							<h:outputText rendered="#{poDetail.payState ne 'B01'}"
+								value="#{masterService.getNameCdLabel('B',poDetail.payState)}" />
+						</p:column>
+						<p:column headerText="已购" width="40">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{poDetail.buyQty}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:spinner value="#{poDetail.buyQty}" min="1" max="1000" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="待购" width="40">
+							<h:outputText value="#{poDetail.itemQty - poDetail.buyQty}"
+								style="color:red"
+								rendered="#{poDetail.itemQty ne poDetail.buyQty}" />
+							<h:outputText value="#{poDetail.itemQty - poDetail.buyQty}"
+								rendered="#{poDetail.itemQty eq poDetail.buyQty}" />
+						</p:column>
+						<p:column headerText="装箱单" width="80"
+							sortBy="#{poDetail.payState}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{poDetail.shipId}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{poDetail.shipId}" style="width:100">
+										<f:selectItem itemLabel="   " itemValue="" />
+										<f:selectItems value="#{masterService.getShipList()}" />
+									</p:selectOneMenu>
+
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="X" style="width:16px;text-align:center">
+							<p:commandButton icon="ui-icon-trash"
+								actionListener="#{needShipAction.deletePoDetail(poDetail)}"
+								style="width:20px;height:20px" update="@form">
+								<p:confirm header="删除确认" message="确定删除本条明细吗？"
+									icon="ui-icon-alert" />
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+
+				</p:panel>
+
+			</h:form>
+		</ui:define>
+	</ui:composition>
+</body>
+</html>

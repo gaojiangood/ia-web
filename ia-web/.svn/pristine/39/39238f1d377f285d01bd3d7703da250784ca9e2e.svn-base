@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+	<title>新建订单明细</title>
+	<style type="text/css">
+.ui-widget {
+	font-size: 90%;
+}
+</style>
+</h:head>
+
+<h:body>
+	<f:event listener="#{poAction.initCreatePoDetail}"
+		type="preRenderComponent"></f:event>
+	<h:form>
+		<p:messages id="msg" showDetail="true" autoUpdate="true"
+			closable="true" />
+		<p:panelGrid columns="2">
+			<p:panelGrid id="poDetail" columns="2">
+
+				<h:outputText value="客户:" />
+				<p:selectOneMenu value="#{poModel.createPoDetail.custId}"
+					panelStyle="width:100px" effect="fade" var="t" style="width:80px"
+					filter="true" filterMatchMode="contains">
+					<f:selectItems value="#{masterService.getCustomerList()}"
+						var="item" itemLabel="#{item.getLabel}"
+						itemValue="#{item.getValue}" />
+					<p:column>
+						<h:outputText value="#{item.getLabel}" />
+					</p:column>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="item" value="商品:" />
+				<p:selectOneMenu id="item" value="#{poModel.createPoDetail.itemId}"
+					required="true" panelStyle="width:580px" effect="fade"  var="t"
+					filter="true" filterMatchMode="contains">
+					<f:selectItems value="#{masterService.getItemList()}" var="item"
+						itemLabel="#{item.getLabel}" itemValue="#{item.getValue}" />
+					<p:column>
+					<h:outputText value="照片" />
+					</p:column>
+					<p:column>
+						<h:outputText value="#{t.getLabel}" />
+					</p:column>
+					<p:ajax event="change" listener="#{poAction.itemChangedCreate()}"
+						process="poDetail" update="poDetail,img" />
+				</p:selectOneMenu>
+
+				<p:outputLabel for="qty" value="数量:" />
+				<p:spinner id="qty" value="#{poModel.createPoDetail.itemQty}"
+					min="0" size="3" max="1000" />
+
+				<p:outputLabel for="itemPricePay" value="单价:" />
+				<p:spinner id="itemPricePay"
+					value="#{poModel.createPoDetail.itemPricePay}" min="-2000" size="8"
+					max="10000">
+					<p:tooltip for="itemPricePay">
+						<h:outputText value="原价:#{poModel.createPoDetail.itemPrice}" />
+						<h:outputText value="成本:#{poModel.createPoDetail.itemCost}" />
+					</p:tooltip>
+				</p:spinner>
+
+				<p:outputLabel value="备注:" />
+				<p:inputText value="#{poModel.createPoDetail.comment}" size="60" />
+
+				<p:outputLabel for="buyqty" value="已购数量:" />
+				<p:spinner id="buyqty" value="#{poModel.createPoDetail.buyQty}"
+					min="0" size="3" max="1000" />
+
+
+				<p:outputLabel value="付款:" />
+				<p:selectOneMenu value="#{poModel.createPoDetail.payState}"
+					style="width:80">
+					<f:selectItems value="#{masterService.getNameCd('B')}" />
+				</p:selectOneMenu>
+
+				<h:outputText value="装箱单:" />
+				<p:selectOneMenu value="#{poModel.createPoDetail.shipId}">
+					<f:selectItems value="#{masterService.getShipList()}" />
+				</p:selectOneMenu>
+			</p:panelGrid>
+			<p:graphicImage id="img"
+				value="/pic/#{masterService.getItemById(poModel.createPoDetail.itemId).picUrl}"
+				width="300">
+			</p:graphicImage>
+
+		</p:panelGrid>
+		<p:column headerText="Select Car">
+			<p:commandButton value="确定" process="@form"
+				actionListener="#{poAction.closePoDetail(poModel.createPoDetail)}" />
+		</p:column>
+	</h:form>
+</h:body>
+</html>

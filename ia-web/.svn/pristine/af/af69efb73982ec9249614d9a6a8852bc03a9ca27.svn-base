@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:body>
+	<ui:composition>
+		<h:form>
+			<p:graphicImage library="images" name="logo2.jpg" alt="小毛驴" width="30" hight="30"/>
+			<p:button outcome="poMain" value="订单管理"/>
+			<p:button outcome="itemMain" value="商品管理"/>
+			<p:button outcome="shipMain" value="装箱单"/>
+			<p:button outcome="needBuyMain" value="待购商品"/>
+			<p:button outcome="addrMain" value="地址管理"/>
+			<p:button outcome="customerMain" value="客户管理"/>
+			<p:button outcome="analysisMain" value="统计分析"/>
+			<p:button outcome="traceMain" value="运单跟踪"/>
+		</h:form>
+	</ui:composition>
+</h:body>
+</html>

@@ -1,0 +1,78 @@
+package ia.dao.custom;
+
+/** */
+@javax.annotation.Generated(value = { "Doma", "1.38.0" }, date = "2016-03-05T12:46:08.027+0900")
+public class TPoDetailCusDaoImpl extends org.seasar.doma.internal.jdbc.dao.AbstractDao implements ia.dao.custom.TPoDetailCusDao {
+
+    static {
+        org.seasar.doma.internal.Artifact.validateVersion("1.38.0");
+    }
+
+    /** */
+    public TPoDetailCusDaoImpl() {
+        super(new ia.core.AppConfig());
+    }
+
+    /**
+     * @param config the config
+     */
+    @javax.inject.Inject()
+    public TPoDetailCusDaoImpl(org.seasar.doma.jdbc.Config config) {
+        super(config);
+    }
+
+    @Override
+    public java.util.List<ia.entity.TPoDetail> selectNeedBuy(java.lang.String orderBy) {
+        entering("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedBuy", orderBy);
+        try {
+            org.seasar.doma.internal.jdbc.query.SqlFileSelectQuery __query = new org.seasar.doma.internal.jdbc.query.SqlFileSelectQuery();
+            __query.setConfig(config);
+            __query.setSqlFilePath("META-INF/ia/dao/custom/TPoDetailCusDao/selectNeedBuy.sql");
+            __query.addParameter("orderBy", java.lang.String.class, orderBy);
+            __query.setCallerClassName("ia.dao.custom.TPoDetailCusDaoImpl");
+            __query.setCallerMethodName("selectNeedBuy");
+            __query.setResultEnsured(false);
+            __query.setResultMappingEnsured(false);
+            __query.setQueryTimeout(-1);
+            __query.setMaxRows(-1);
+            __query.setFetchSize(-1);
+            __query.prepare();
+            org.seasar.doma.internal.jdbc.command.SelectCommand<java.util.List<ia.entity.TPoDetail>> __command = new org.seasar.doma.internal.jdbc.command.SelectCommand<java.util.List<ia.entity.TPoDetail>>(__query, new org.seasar.doma.internal.jdbc.command.EntityResultListHandler<ia.entity.TPoDetail>(ia.entity._TPoDetail.getSingletonInternal()));
+            java.util.List<ia.entity.TPoDetail> __result = __command.execute();
+            __query.complete();
+            exiting("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedBuy", __result);
+            return __result;
+        } catch (java.lang.RuntimeException __e) {
+            throwing("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedBuy", __e);
+            throw __e;
+        }
+    }
+
+    @Override
+    public java.util.List<ia.entity.TPoDetail> selectNeedShip(java.lang.String orderBy) {
+        entering("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedShip", orderBy);
+        try {
+            org.seasar.doma.internal.jdbc.query.SqlFileSelectQuery __query = new org.seasar.doma.internal.jdbc.query.SqlFileSelectQuery();
+            __query.setConfig(config);
+            __query.setSqlFilePath("META-INF/ia/dao/custom/TPoDetailCusDao/selectNeedShip.sql");
+            __query.addParameter("orderBy", java.lang.String.class, orderBy);
+            __query.setCallerClassName("ia.dao.custom.TPoDetailCusDaoImpl");
+            __query.setCallerMethodName("selectNeedShip");
+            __query.setResultEnsured(false);
+            __query.setResultMappingEnsured(false);
+            __query.setQueryTimeout(-1);
+            __query.setMaxRows(-1);
+            __query.setFetchSize(-1);
+            __query.prepare();
+            org.seasar.doma.internal.jdbc.command.SelectCommand<java.util.List<ia.entity.TPoDetail>> __command = new org.seasar.doma.internal.jdbc.command.SelectCommand<java.util.List<ia.entity.TPoDetail>>(__query, new org.seasar.doma.internal.jdbc.command.EntityResultListHandler<ia.entity.TPoDetail>(ia.entity._TPoDetail.getSingletonInternal()));
+            java.util.List<ia.entity.TPoDetail> __result = __command.execute();
+            __query.complete();
+            exiting("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedShip", __result);
+            return __result;
+        } catch (java.lang.RuntimeException __e) {
+            throwing("ia.dao.custom.TPoDetailCusDaoImpl", "selectNeedShip", __e);
+            throw __e;
+        }
+    }
+
+}

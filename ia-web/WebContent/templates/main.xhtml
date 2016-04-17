@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+
+	<ui:insert name="windowTitle">
+		<title>小毛驴</title>
+	</ui:insert>
+</h:head>
+<h:body>
+	<h:outputStylesheet name="css/styles.css"></h:outputStylesheet>
+
+	<p:ajaxStatus onstart="PF('ajaxStatusDlg').show()"
+		oncomplete="PF('ajaxStatusDlg').hide()" onerror="PF('ajaxStatusDlg').hide()"/>
+	<p:dialog modal="true" widgetVar="ajaxStatusDlg" draggable="false"
+		closable="false" showHeader="false" resizable="false"
+		closeOnEscape="true">
+		<p:graphicImage library="images" name="ajaxloading2.gif" alt="loading"></p:graphicImage>
+	</p:dialog>
+	<p:confirmDialog global="true" showEffect="fade" hideEffect="explode">
+        <p:commandButton value="确认" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+        <p:commandButton value="取消" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+    </p:confirmDialog>
+
+	<p:layout fullPage="true" stateful="false">
+
+		<p:layoutUnit position="north" id="top" size="60">
+			<ui:insert name="header">
+				<ui:include src="./parts/header.xhtml" />
+			</ui:insert>
+		</p:layoutUnit>
+
+
+		<p:layoutUnit position="center" id="center">
+			<ui:insert name="body" />
+		</p:layoutUnit>
+
+	</p:layout>
+
+	<ui:insert name="dialog" />
+
+</h:body>
+
+
+</html>

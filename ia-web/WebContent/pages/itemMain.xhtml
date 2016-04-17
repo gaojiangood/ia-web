@@ -1,0 +1,200 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<head>
+
+</head>
+
+<body>
+	<ui:composition template="../templates/main.xhtml">
+		<ui:define name="body">
+			<h:form id="itemForm">
+				<p:messages id="msgs" showDetail="true" autoUpdate="false" showSummary="false"
+					closable="true" />
+				<p:panel id="poListPnl" header="商品列表" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="poListPnl"
+					style="margin-bottom:20px">
+					<!-- 用于单元格编辑后刷新整个表格 -->
+					<p:remoteCommand name="onCellEdit" update="@form" />
+					
+					<p:commandButton value="新建商品"
+						actionListener="#{itemAction.createItem}" update="@form" icon="ui-icon-plus">
+					</p:commandButton>
+					
+					<p:commandButton value="商品查询"
+						actionListener="#{itemAction.getAllItem}" icon="ui-icon-search"
+						update="@form">
+					</p:commandButton>
+					<p:inputText value="#{itemModel.conItemName}"/>
+
+					<p:dataTable id="itemList" var="item" value="#{itemModel.itemList}"
+						scrollable="true" scrollHeight="150" editable="true"
+						editMode="cell" selection="#{itemModel.selected}"
+						rowKey="#{item.itemId}" style="margin-bottom:0">
+
+						<p:ajax event="cellEdit" listener="#{itemAction.updateItem(item)}"
+							update="itemList" oncomplete="onCellEdit()" />
+
+						<p:column selectionMode="multiple"
+							style="width:16px;text-align:center" />
+						<p:column headerText="O" style="width:16px;text-align:center">
+						    <!-- 放大镜 -->
+							<p:commandButton icon="ui-icon-search"
+								style="width:20px;height:20px" actionListener="#{itemAction.showDetail(item)}" 
+								update="@form" />
+						</p:column>
+
+						<p:column headerText="商品编号" style="width:80px;text-align:center">
+							<h:outputText value="#{item.itemId}" />
+						</p:column>
+						<p:column headerText="商品名称">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText id="itemName" value="#{item.itemName}" />
+									<p:tooltip for="itemName">
+										<p:graphicImage id="img"
+											value="/pic/#{masterService.getItemById(item.itemId).picUrl}"
+											width="300" />
+									</p:tooltip>
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{item.itemName}" size="200"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="价格" style="width:60px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{item.itemPrice}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:spinner value="#{item.itemPrice}" min="1" max="10000" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="成本" style="width:60px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{item.itemCost}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:spinner value="#{item.itemCost}" min="1" max="10000" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="利润" style="width:60px;text-align:center">
+							<h:outputText value="#{item.itemPrice - item.itemCost}" />
+						</p:column>
+
+						<p:column headerText="X" style="width:16px;text-align:center">
+							<p:commandButton icon="ui-icon-trash"
+								actionListener="#{itemAction.deleteItem(item)}"
+								style="width:20px;height:20px" update="@form">
+								<p:confirm header="删除确认" message="确定删除本商品吗？" icon="ui-icon-alert" />
+							</p:commandButton>	
+						</p:column>
+					</p:dataTable>
+
+				</p:panel>
+				<p:panel id="itemDetailPnl" header="商品详细" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="itemDetailPnl"
+					style="margin-bottom:20px">
+
+					<p:commandButton value="保存"
+						actionListener="#{itemAction.updateItem(itemModel.curItem)}" process= "itemForm" update="itemForm">
+						<p:confirm header="保存确认" message="确定保存吗？" icon="ui-icon-alert" />
+					</p:commandButton>
+
+					<!-- 数据 -->
+					<p:panelGrid columns="6" rendered="#{not empty itemModel.curItem}">
+							<p:column>
+								<h:outputText value="商品编号:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.itemId}" size="7" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="商品名称:" />
+							</p:column>
+							<p:column colspan="2">
+								<p:inputText value="#{itemModel.curItem.itemName}" size="30"/>
+							</p:column>
+							<p:column/>
+							<p:column/>
+
+							<p:column>
+								<h:outputText value="商品分类:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.classId}" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="商品价格:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.itemPrice}" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="商品成本:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.itemCost}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="条形码:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.barCode}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="规格:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.size}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="重量:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.wight}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="备注:" />
+							</p:column>
+							<p:column>
+								<p:inputText value="#{itemModel.curItem.comment}" />
+							</p:column>
+							
+					</p:panelGrid>
+
+
+					<!-- 图片 -->
+					<p:graphicImage id="img" value="/pic/#{itemModel.curItem.picUrl}" width="300" rendered="#{not empty itemModel.curItem and not empty itemModel.curItem.picUrl}"/>
+					<p:overlayPanel id="imgPanel" for="img" showEffect="blind">
+						<p:graphicImage  value="/pic/#{itemModel.curItem.picUrl}" width="600"/>
+					</p:overlayPanel>
+					<!-- bar code -->
+					<p:barcode value="#{itemModel.curItem.barCode}" type="ean13" width="200"
+						rendered="#{not empty itemModel.curItem and not empty itemModel.curItem.barCode}"/>
+
+				</p:panel>
+
+			</h:form>
+			<h:form id="uploadForm">
+				<p:fileUpload
+					fileUploadListener="#{itemAction.photoUpload}" 
+					mode="advanced" dragDropSupport="true" process=":uploadForm :itemForm" update=":uploadForm :itemForm:img"
+					allowTypes="/(\.|\/)(gif|jpe?g|png)$/" />
+				<p:growl id="messages" showDetail="true" />
+			</h:form>
+
+		</ui:define>
+	</ui:composition>
+</body>
+</html>

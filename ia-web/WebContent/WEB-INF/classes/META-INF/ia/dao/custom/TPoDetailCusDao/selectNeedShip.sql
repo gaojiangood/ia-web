@@ -1,0 +1,31 @@
+select
+  D.PO_D_ID,
+  D.PO_ID,
+  D.CUST_ID,
+  D.ITEM_ID,
+  D.PO_D_DATE,
+  D.ITEM_QTY,
+  D.BUY_QTY,
+  D.ITEM_PRICE,
+  D.ITEM_COST,
+  D.PRICE_CUT_ITEM,
+  D.ITEM_PRICE_PAY,
+  D.ITEM_PROFIT,
+  D.PAY_STATE,
+  D.SHIP_ID,
+  D.BUY_ID,
+  D.COMMENT,
+  D.REG_USER_ID,
+  D.REG_TIME,
+  D.UPD_USER_ID,
+  D.UPD_TIME,
+  D.VERSION_NO
+FROM
+        T_PO_DETAIL D
+        ,T_PO P
+    WHERE
+        D.PO_ID = P.PO_ID
+        AND P.PO_STATE = 'A02'
+        AND D.PAY_STATE = 'B02'
+        AND D.SHIP_ID = ''
+/*# orderBy */

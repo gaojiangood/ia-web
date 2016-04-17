@@ -1,0 +1,36 @@
+package ia.core;
+
+public class IaConstant {
+	
+	/**
+	 * 订单状态：采购中
+	 */
+	public static String PO_STATE_BUY = "A01";
+	
+	/**
+	 * 订单状态：已发货
+	 */
+	public static String PO_STATE_SHIPED = "A02";
+	
+	/**
+	 * 付款状态：未付
+	 */
+	public static String PAY_STATE_NO = "B01";
+	
+	/**
+	 * 付款状态：已付
+	 */
+	public static String PAY_STATE_YES = "B02";
+	
+	/**
+	 * 运单状态：待发货
+	 */
+	public static String SHIP_STATE_WAIT = "C01";
+	
+	/**
+	 * 运单状态：已发货
+	 */
+	public static String SHIP_STATE_SENT = "C02";
+	
+
+}

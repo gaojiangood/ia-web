@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:pm="http://primefaces.org/mobile">
+     
+    <f:view renderKitId="PRIMEFACES_MOBILE" />
+     
+    <h:head>
+ 
+    </h:head>
+     
+    <h:body>
+         
+        <pm:page id="first">
+            <pm:header title="商品管理" swatch="b">
+			<p:commandButton action="#{itemAction.pmGotoCreateItem()}" value="新建"
+				icon="ui-icon-plus" styleClass="ui-btn-right ui-btn-inline">
+			</p:commandButton>
+		</pm:header>
+             
+            <pm:content>
+               <h:form id="firstForm">
+				<p:inputText value="#{itemModel.conItemName}"></p:inputText>
+				<p:commandButton value="查询" styleClass="ui-btn-b"
+					actionListener="#{itemAction.getAllItem}" update="itemList"
+					icon="ui-icon-refresh" />
+
+				<p:dataList id="itemList" var="item" value="#{itemModel.itemList}">
+					<p:commandLink action="#{itemAction.pmShowDetail()}">
+						<f:param name="itemId" value="#{item.itemId}" />
+						<p:graphicImage id="img" value="/pic/#{item.picUrl}" />
+						<h:outputText value="#{item.itemName}" />
+						<br />
+						<h:outputText value="单价：#{item.itemPrice}" style="color:red" />
+						<br />
+						<h:outputText value="成本：#{item.itemCost}" style="color:green" />
+					</p:commandLink>
+
+				</p:dataList>
+
+			</h:form>
+            </pm:content>
+        </pm:page>
+ 
+       <pm:page id="second">
+
+		<pm:header title="添加商品" swatch="b">
+			<p:button outcome="pm:first" value="返回"
+				icon="ui-icon-arrow-l" styleClass="ui-btn-left ui-btn-inline" />
+		</pm:header>
+
+		<pm:content>
+			<h:form id="itemForm">
+				<p:commandButton value="保存" styleClass="ui-btn-b"
+					actionListener="#{itemAction.pmCreateItem()}"
+					process="itemForm" update="itemForm">
+				</p:commandButton>
+
+				<h:outputText value="商品名称:" />
+				<p:inputText value="#{itemModel.curItem.itemName}" />
+
+				<p:panelGrid columns="2">
+
+					<p:column>
+						<h:outputText value="商品分类:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.classId}" />
+					</p:column>
+
+					<p:column>
+						<h:outputText value="商品价格:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.itemPrice}" />
+					</p:column>
+
+					<p:column>
+						<h:outputText value="商品成本:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.itemCost}" />
+					</p:column>
+					<p:column>
+						<h:outputText value="条形码:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.barCode}" />
+					</p:column>
+					<p:column>
+						<h:outputText value="规格:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.size}" />
+					</p:column>
+					<p:column>
+						<h:outputText value="重量:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.wight}" />
+					</p:column>
+					<p:column>
+						<h:outputText value="备注:" />
+					</p:column>
+					<p:column>
+						<p:inputText value="#{itemModel.curItem.comment}" />
+					</p:column>
+
+				</p:panelGrid>
+
+
+				<!-- 图片 -->
+				<p:graphicImage id="img" value="/pic/#{itemModel.curItem.picUrl}"
+					width="300"
+					rendered="#{not empty itemModel.curItem and not empty itemModel.curItem.picUrl}" />
+				<!-- bar code -->
+				<p:barcode value="#{itemModel.curItem.barCode}" type="ean13"
+					width="200"
+					rendered="#{not empty itemModel.curItem and not empty itemModel.curItem.barCode}" />
+			</h:form>
+
+
+		</pm:content>
+		<h:form id="uploadForm" enctype="multipart/form-data">
+			<p:fileUpload value="#{itemAction.file1}" mode="simple"
+				skinSimple="true" />
+
+			<p:commandButton value="上传照片" ajax="false" styleClass="ui-btn-b"
+				icon="ui-icon-arrow-u" actionListener="#{itemAction.pmPhotoUpload}" />
+
+		</h:form>
+	</pm:page>
+ 
+ 
+    </h:body>
+     
+</html>

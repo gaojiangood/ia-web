@@ -1,0 +1,135 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<head>
+
+</head>
+
+<body>
+	<ui:composition template="../templates/main.xhtml">
+		<ui:define name="body">
+			<h:form id="addrForm">
+				<p:messages id="msgs" showDetail="true" autoUpdate="false" showSummary="false"
+					closable="true" />
+				<p:panel id="poListPnl" header="地址列表" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="poListPnl"
+					style="margin-bottom:20px">
+					<!-- 用于单元格编辑后刷新整个表格 -->
+					<p:remoteCommand name="onCellEdit" update="@form" />
+					
+					<p:commandButton value="新建地址"
+						actionListener="#{addrAction.createAddr}" update="@form" icon="ui-icon-plus">
+					</p:commandButton>
+					
+					<p:commandButton value="地址查询"
+						actionListener="#{addrAction.getAllAddr}" icon="ui-icon-search"
+						update="@form">
+					</p:commandButton>
+					
+					<h:outputText value="客户:" />
+					<p:selectOneMenu value="#{addrModel.conCustId}"
+						panelStyle="width:100px" effect="fade" var="t" style="width:80px"
+						filter="true" filterMatchMode="contains">
+						<f:selectItem itemLabel="       " itemValue="" />
+						<f:selectItems value="#{masterService.getCustomerList()}"
+							var="item" itemLabel="#{item.getLabel}"
+							itemValue="#{item.getValue}" />
+						<p:column>
+							<h:outputText value="#{item.getLabel}" />
+						</p:column>
+					</p:selectOneMenu>
+
+					<p:dataTable id="addrList" var="addr" value="#{addrModel.addrList}"
+						scrollable="true"  editable="true" scrollWidth="100%"
+						editMode="cell" 
+						 rows="20" paginator="true"
+						paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="10,20,50,100" style="margin-bottom:0">
+
+						<p:ajax event="cellEdit" listener="#{addrAction.updateAddr(addr)}"
+							update="addrList" oncomplete="onCellEdit()" />
+
+						<p:column headerText="地址编号" width="60">
+							<h:outputText value="#{addr.addrId}" />
+						</p:column>
+						<p:column headerText="客户" width="60">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText
+										value="#{masterService.getCustomerName(addr.custId)}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{addr.custId}" panelStyle="width:100px"
+										effect="fade" var="t" style="width:80px" filter="true"
+										filterMatchMode="contains">
+										<f:selectItems value="#{masterService.getCustomerList()}"
+											var="item" itemLabel="#{item.getLabel}"
+											itemValue="#{item.getValue}" />
+										<p:column>
+											<h:outputText value="#{item.getLabel}" />
+										</p:column>
+									</p:selectOneMenu>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="收件人" width="80">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{addr.receiver}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{addr.receiver}"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="电话" width="80">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{addr.telNo}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{addr.telNo}"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="地址" width="200">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{addr.addr}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{addr.addr}"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="邮编" width="80">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{addr.postCode}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{addr.postCode}"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="X" style="width:16px;text-align:center">
+							<p:commandButton icon="ui-icon-trash"
+								actionListener="#{addrAction.deleteAddr(addr)}"
+								style="width:20px;height:20px" update="@form">
+								<p:confirm header="删除确认" message="确定删除本地址吗？" icon="ui-icon-alert" />
+							</p:commandButton>	
+						</p:column>
+					</p:dataTable>
+
+				</p:panel>
+
+			</h:form>
+
+		</ui:define>
+	</ui:composition>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<head>
+
+</head>
+
+<body>
+	<ui:composition template="../templates/main.xhtml">
+		<ui:define name="body">
+			<h:form id="shipForm">
+				<p:messages id="msgs" showDetail="true" autoUpdate="false"
+					showSummary="false" closable="true" />
+				<p:panel id="shipListPnl" header="装箱单列表" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="shipListPnl"
+					style="margin-bottom:20px">
+
+					<p:commandButton value="新建装箱单"
+						actionListener="#{shipAction.createShip}" icon="ui-icon-plus"
+						update="@form">
+					</p:commandButton>
+
+					<p:commandButton value="装箱单查询"
+						actionListener="#{shipAction.getAllShip}" icon="ui-icon-search"
+						update="@form">
+					</p:commandButton>
+					<h:outputText value="客户:" />
+					<p:selectOneMenu value="#{shipModel.conCustomerId}"
+						panelStyle="width:100px" effect="fade" var="t" style="width:80px"
+						filter="true" filterMatchMode="contains">
+						<f:selectItem itemLabel="       " itemValue="" />
+						<f:selectItems value="#{masterService.getCustomerList()}"
+							var="item" itemLabel="#{item.getLabel}"
+							itemValue="#{item.getValue}" />
+						<p:column>
+							<h:outputText value="#{item.getLabel}" />
+						</p:column>
+					</p:selectOneMenu>
+
+					<h:outputText value="订单状态:" />
+					<p:selectOneMenu value="#{shipModel.conShipState}">
+						<f:selectItem itemLabel="" itemValue="" />
+						<f:selectItems value="#{masterService.getNameCd('C')}" />
+					</p:selectOneMenu>
+
+					<h:outputText value="订单日期:" />
+					<p:calendar value="#{shipModel.shipDateFrom}" size="5">
+					</p:calendar>
+					<h:outputText value="-" />
+					<p:calendar value="#{shipModel.shipDateTo}" size="5">
+					</p:calendar>
+
+
+					<h:outputText value="总销售额:" />
+					<h:outputText value="#{shipModel.totalPrice}" style="color:green" />
+
+					<h:outputText value="总利润:" />
+					<h:outputText value="#{shipModel.totalProfit}" style="color:green" />
+
+
+					<p:dataTable id="shipList" var="ship" value="#{shipModel.shipList}"
+						scrollable="true" scrollHeight="150" editable="true"
+						editMode="cell" style="margin-bottom:0">
+
+						<p:ajax event="cellEdit" listener="#{shipAction.updateShip(ship)}"
+							update="shipList" oncomplete="onCellEdit()" />
+
+						<p:column headerText="O" style="width:16px;text-align:center">
+							<p:commandButton icon="ui-icon-search"
+								actionListener="#{shipAction.getAllPoDetail(ship)}"
+								style="width:20px;height:20px" update="@form" />
+						</p:column>
+
+						<p:column headerText="编号" style="width:60px;text-align:center">
+							<h:outputText value="#{ship.shipId}" />
+						</p:column>
+						<p:column headerText="客户" style="width:60px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText
+										value="#{masterService.getCustomerName(ship.custId)}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{ship.custId}"
+										panelStyle="width:100px" effect="fade" var="t"
+										style="width:80px" filter="true" filterMatchMode="contains">
+										<f:selectItem itemLabel="   " itemValue="" />
+										<f:selectItems value="#{masterService.getCustomerList()}"
+											var="item" itemLabel="#{item.getLabel}"
+											itemValue="#{item.getValue}" />
+										<p:column>
+											<h:outputText value="#{item.getLabel}" />
+										</p:column>
+									</p:selectOneMenu>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="方式" style="width:40px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText
+										value="#{masterService.getNameCdLabel('D',ship.shipWay)}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{ship.shipWay}">
+										<f:selectItem itemLabel="   " itemValue="" />
+										<f:selectItems value="#{masterService.getNameCd('D')}" />
+									</p:selectOneMenu>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="数量" style="width:40px;text-align:center">
+							<h:outputText value="#{ship.itemQtySum}" />
+						</p:column>
+						<p:column headerText="销售额" style="width:60px;text-align:center">
+							<h:outputText value="#{ship.itemPriceSum}" />
+						</p:column>
+						<p:column headerText="成本" style="width:60px;text-align:center">
+							<h:outputText value="#{ship.itemCostSum}" />
+						</p:column>
+						<p:column headerText="运费" style="width:50px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{ship.shipFee}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:spinner value="#{ship.shipFee}" min="0" max="1000" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="利润" style="width:60px;text-align:center">
+							<h:outputText value="#{ship.profit}" />
+						</p:column>
+						<p:column headerText="发货日期" style="width:100px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{ship.shipDate}">
+										<f:convertDateTime pattern="yyyy-MM-dd" />
+									</h:outputText>
+								</f:facet>
+								<f:facet name="input">
+									<p:calendar value="#{ship.shipDate}" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="运单号" style="width:100px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{ship.lableNo}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{ship.lableNo}" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="状态" style="width:60px;text-align:center">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText
+										value="#{masterService.getNameCdLabel('C',ship.shipState)}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{ship.shipState}">
+										<f:selectItems value="#{masterService.getNameCd('C')}" />
+									</p:selectOneMenu>
+
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="地址">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText
+										value="#{masterService.getAddrById(ship.addrId).receiver}: #{masterService.getAddrById(ship.addrId).addr}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:selectOneMenu value="#{ship.addrId}"
+										panelStyle="width:100px" effect="fade" var="t"
+										style="width:200px" filter="true" filterMatchMode="contains">
+										<f:selectItem itemLabel="   " itemValue="" />
+										<f:selectItems value="#{masterService.getAddrList()}"
+											var="item" itemLabel="#{item.getLabel}"
+											itemValue="#{item.getValue}" />
+										<p:column width="200">
+											<h:outputText value="#{item.getLabel}" />
+										</p:column>
+									</p:selectOneMenu>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+					</p:dataTable>
+
+				</p:panel>
+				<p:panel id="poDetailPnl" header="订单明细" toggleable="true"
+					toggleSpeed="500" closeSpeed="500" widgetVar="poDetailPnl"
+					style="margin-bottom:20px">
+
+					<!-- 用于单元格编辑后刷新整个表格 -->
+					<p:remoteCommand name="onCellEdit" update="@form" />
+
+
+					<p:dataTable id="poDetailList" var="poDetail"
+						draggableColumns="true" draggableRows="true"
+						emptyMessage="订单编号：#{shipModel.curShip.shipId} 尚未添加明细。"
+						value="#{shipModel.poDetail}"
+						selection="#{shipModel.selectedDetail}" rowKey="#{poDetail.poDId}"
+						rows="50" paginator="true"
+						paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="20,50,100,200" style="margin-bottom:0">
+
+						<p:ajax event="rowSelectCheckbox" update="@form" />
+						<p:ajax event="rowUnselectCheckbox" update="@form" />
+
+						<f:facet name="header">
+							<!-- 汇总栏 -->
+							<p:panelGrid columns="9" layout="grid">
+								<h:outputText value="金额合计:" />
+								<h:outputText value="#{shipModel.curShip.itemPriceSum}"
+									style="color:green" />
+
+								<h:outputText value="数量合计:" />
+								<h:outputText value="#{shipModel.curShip.itemQtySum}"
+									style="color:green" />
+
+								<h:outputText value="Content" />
+								<h:outputText value="Content" />
+								<h:outputText value="Content" />
+							</p:panelGrid>
+						</f:facet>
+
+
+
+						<p:ajax event="cellEdit"
+							listener="#{poAction.updatePoDetail(poDetail)}" update="@this"
+							oncomplete="onCellEdit()" />
+
+						<p:column selectionMode="multiple"
+							style="width:16px;text-align:center" />
+
+						<!-- 备注 -->
+						<p:column headerText="C" style="width:16px;text-align:center">
+							<p:commandButton icon="ui-icon-pencil"
+								actionListener="#{poAction.showComment(poDetail,'ship')}"
+								style="width:20px;height:20px" update="poDetailList"
+								rendered="#{empty poDetail.comment}">
+								<p:ajax event="dialogReturn" update="poDetailList" />
+							</p:commandButton>
+
+							<p:commandButton icon="ui-icon-comment"
+								actionListener="#{poAction.showComment(poDetail,'ship')}" id="comment"
+								style="width:20px;height:20px" update="poDetailList"
+								rendered="#{not empty poDetail.comment}">
+								<p:ajax event="dialogReturn" update="poDetailList" />
+							</p:commandButton>
+							<p:tooltip for="comment" value="#{poDetail.comment}"
+								trackMouse="true" rendered="#{not empty poDetail.comment}" />
+
+						</p:column>
+
+
+						<p:column headerText="订单编号" style="width:80px;text-align:center">
+							<h:outputText value="#{poDetail.poId}" />
+						</p:column>
+
+						<p:column headerText="客户" style="width:80px;text-align:center"
+							sortBy="#{poDetail.custId}">
+							<h:outputText
+								value="#{masterService.getCustomerName(poDetail.custId)}" />
+						</p:column>
+
+						<p:column headerText="商品" sortBy="#{poDetail.itemId}">
+							<h:outputText id="itemName"
+								value="#{masterService.getItemName(poDetail.itemId)}" />
+							<p:tooltip for="itemName">
+								<p:graphicImage id="img"
+									value="/pic/#{masterService.getItemById(poDetail.itemId).picUrl}"
+									width="300" />
+							</p:tooltip>
+						</p:column>
+
+
+						<p:column headerText="数量" style="width:60px;text-align:center">
+							<h:outputText value="#{poDetail.itemQty}" />
+						</p:column>
+						<p:column headerText="已购" width="40">
+							<h:outputText value="#{poDetail.buyQty}" />
+						</p:column>
+
+						<p:column headerText="单价" style="width:60px;text-align:center">
+							<h:outputText id="itemPricePay" value="#{poDetail.itemPricePay}" />
+							<p:tooltip for="itemPricePay">
+								<p:graphicImage value="/images/prime_logo.png" />
+								<h:outputText value="原价:#{poDetail.itemPrice}" />
+							</p:tooltip>
+						</p:column>
+						<p:column headerText="小计" style="width:60px;text-align:center">
+							<h:outputText value="#{poDetail.itemPricePay * poDetail.itemQty}" />
+						</p:column>
+
+						<p:column headerText="付款" style="width:40px;text-align:center"
+							sortBy="#{poDetail.payState}">
+							<h:outputText style="color:red"
+								rendered="#{poDetail.payState eq 'B01'}"
+								value="#{masterService.getNameCdLabel('B',poDetail.payState)}" />
+							<h:outputText rendered="#{poDetail.payState ne 'B01'}"
+								value="#{masterService.getNameCdLabel('B',poDetail.payState)}" />
+						</p:column>
+
+					</p:dataTable>
+
+				</p:panel>
+
+			</h:form>
+		</ui:define>
+	</ui:composition>
+</body>
+</html>
